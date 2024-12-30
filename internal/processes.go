@@ -20,9 +20,10 @@ func RecordProcesses(toWatch *hashset.Set) {
 	for _, proc := range procs {
 		name := proc.Executable()
 		if toWatch.Contains(name) && !alreadyRecorded.Contains(name) {
+			fmt.Printf("saving process %s\n", name)
 			SaveSeenProcess(Process{
 				Name: name,
-				Seen: time.Now(),
+				Time: time.Now(),
 			})
 			alreadyRecorded.Add(name)
 		}

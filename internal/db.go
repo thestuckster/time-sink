@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"database/sql"
+	"errors"
 	_ "modernc.org/sqlite"
 	"time"
 )
@@ -15,12 +16,16 @@ func CreateTableIfNotExists() {
 		panic(err)
 	}
 
-	db.ExecContext(context.Background(),
+	_, err = db.ExecContext(context.Background(),
 		`CREATE TABLE IF NOT EXISTS applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(255) NOT NULL,
-    seen REAL DEFAULT (julianday('now'))
+    seen TEXT NOT NULL,
+    duration TEXT
 		)`)
+	if err != nil {
+		return
+	}
 
 	defer db.Close()
 }
@@ -31,19 +36,66 @@ func SaveSeenProcess(proc Process) {
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
 
-	statement, err := db.Prepare("INSERT INTO applications (name, seen) VALUES (?, ?)")
+	existingProc := checkForExistingRecord(db, proc)
+	if existingProc == nil {
+		saveNewProcess(db, proc)
+		return
+	}
+
+	updatedDuration := FormatTimeToHHMMSS(ParseHHMMSS(existingProc.Duration).Add(time.Minute))
+	updateExistingProcess(db, existingProc.Id, updatedDuration)
+}
+
+func checkForExistingRecord(db *sql.DB, proc Process) *Process {
+
+	var existingProc ProcessDto
+
+	seenDate := ToStandardDateFormat(proc.Time)
+
+	err := db.QueryRow("SELECT * FROM applications WHERE name = ? AND seen = ?", proc.Name, seenDate).
+		Scan(&existingProc.Id, &existingProc.Name, &existingProc.Seen, &existingProc.Duration)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		} else {
+			panic(err)
+		}
+	}
+
+	return &Process{
+		Id:       existingProc.Id,
+		Name:     existingProc.Name,
+		Seen:     existingProc.Seen,
+		Duration: existingProc.Duration,
+	}
+}
+
+func saveNewProcess(db *sql.DB, proc Process) {
+
+	statement, err := db.Prepare("INSERT INTO applications (name, seen, duration) VALUES (?, ?, ?)")
 	if err != nil {
 		panic(err)
 	}
 	defer statement.Close()
 
-	_, err = statement.Exec(proc.Name, goTimeToSqlRealFormat(proc.Seen))
+	seen := ToStandardDateFormat(proc.Time)
+	_, err = statement.Exec(proc.Name, seen, StartingDuration())
 	if err != nil {
 		panic(err)
 	}
 }
 
-func goTimeToSqlRealFormat(t time.Time) string {
-	return t.UTC().Format("2006-01-02 15:04:05")
+func updateExistingProcess(db *sql.DB, rowId int, updatedDuration string) {
+	updateQuery := `
+UPDATE applications 
+SET duration = ? 
+WHERE id = ?
+`
+	_, err := db.Exec(updateQuery, updatedDuration, rowId)
+	if err != nil {
+		panic(err)
+	}
 }

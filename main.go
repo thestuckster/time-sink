@@ -4,9 +4,9 @@ import (
 	"embed"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/go-co-op/gocron"
-	"os"
-	"os/signal"
-	"syscall"
+	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"time"
 	"time-sink/internal"
 )
@@ -26,31 +26,31 @@ func main() {
 	}
 	scheduler.StartAsync()
 
-	//// Create an instance of the app structure
-	//app := NewApp()
-	//
-	//// Create application with options
-	//err = wails.Run(&options.App{
-	//	Title:  "time-sink",
-	//	Width:  1024,
-	//	Height: 768,
-	//	AssetServer: &assetserver.Options{
-	//		Assets: assets,
-	//	},
-	//	BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
-	//	OnStartup:        app.startup,
-	//	Bind: []interface{}{
-	//		app,
-	//	},
-	//})
-	//
-	//if err != nil {
-	//	println("Error:", err.Error())
-	//}
+	// Create Wails app. comment if you just want to run the scheduler for development with no UI
+	app := NewApp()
+	// Create application with options
+	err = wails.Run(&options.App{
+		Title:  "time-sink",
+		Width:  1024,
+		Height: 768,
+		AssetServer: &assetserver.Options{
+			Assets: assets,
+		},
+		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
+		OnStartup:        app.startup,
+		Bind: []interface{}{
+			app,
+		},
+	})
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	_ = <-sigChan
+	if err != nil {
+		println("Error:", err.Error())
+	}
+
+	// wait for manual ctrl+c interrupt. uncomment if you don't want to start all of wails
+	//sigChan := make(chan os.Signal, 1)
+	//signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	//_ = <-sigChan
 
 }
 

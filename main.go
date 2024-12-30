@@ -18,7 +18,7 @@ func main() {
 	scheduler := gocron.NewScheduler(time.UTC)
 	_, err := scheduler.Every(1).Minutes().Do(internal.RecordProcesses, toWatch)
 	if err != nil {
-		return
+		panic(err)
 	}
 	scheduler.StartAsync()
 

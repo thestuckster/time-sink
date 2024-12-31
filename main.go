@@ -34,7 +34,8 @@ func main() {
 	app := NewApp()
 
 	//Create go --> js bindings and register them in the Bind array
-	data := bindings.NewData()
+	dataBinding := bindings.NewDataBinding()
+	configBinding := bindings.NewTimeSinkConfigBinding()
 
 	//Create application with options
 	err = wails.Run(&options.App{
@@ -48,7 +49,8 @@ func main() {
 		OnStartup:        app.startup,
 		Bind: []interface{}{
 			app,
-			data,
+			dataBinding,
+			configBinding,
 		},
 	})
 

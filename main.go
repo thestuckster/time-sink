@@ -9,6 +9,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"time"
 	"time-sink/internal"
+	"time-sink/internal/bindings"
 )
 
 //go:embed all:frontend/dist
@@ -28,6 +29,10 @@ func main() {
 
 	// Create Wails app. comment if you just want to run the scheduler for development with no UI
 	app := NewApp()
+
+	//Create go --> js bindings and register them in the Bind array
+	data := bindings.NewData()
+
 	// Create application with options
 	err = wails.Run(&options.App{
 		Title:  "time-sink",
@@ -40,6 +45,7 @@ func main() {
 		OnStartup:        app.startup,
 		Bind: []interface{}{
 			app,
+			data,
 		},
 	})
 

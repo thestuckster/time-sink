@@ -3,3 +3,4 @@
 node_modules
 ../frontend/dist
 time-sink
+/frontend/dist

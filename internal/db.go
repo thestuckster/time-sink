@@ -48,6 +48,41 @@ func SaveSeenProcess(proc Process) {
 	updateExistingProcess(db, existingProc.Id, updatedDuration)
 }
 
+func GetDailyRecords(date string) []ProcessDto {
+
+	processes := make([]ProcessDto, 0)
+
+	db, err := openDb()
+	defer db.Close()
+
+	rows, err := db.Query("SELECT * FROM applications WHERE seen = ?", date)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var proc ProcessDto
+		err = rows.Scan(&proc.Id, &proc.Name, &proc.Seen, &proc.Duration)
+		if err != nil {
+			panic(err)
+		}
+
+		processes = append(processes, proc)
+	}
+
+	return processes
+}
+
+func openDb() (*sql.DB, error) {
+	dbPath := *GetDbFilePath()
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		panic(err)
+	}
+	return db, err
+}
+
 func checkForExistingRecord(db *sql.DB, proc Process) *Process {
 
 	var existingProc ProcessDto

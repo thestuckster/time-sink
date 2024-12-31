@@ -7,6 +7,8 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"strconv"
+	"strings"
 	"time"
 	"time-sink/internal"
 	"time-sink/internal/bindings"
@@ -17,11 +19,12 @@ var assets embed.FS
 
 func main() {
 	startup()
+	timeSinkConfig := internal.LoadConfiguration()
 
-	// TODO: this is just looking for firefox and discord. need a GUI to really make this useful
-	toWatch := buildTestToWatchSet()
+	//start scheduler
+	toWatch := buildTestToWatchSet(timeSinkConfig)
 	scheduler := gocron.NewScheduler(time.UTC)
-	_, err := scheduler.Every(1).Minutes().Do(internal.RecordProcesses, toWatch)
+	err := buildSchedule(timeSinkConfig, toWatch, scheduler)
 	if err != nil {
 		panic(err)
 	}
@@ -33,7 +36,7 @@ func main() {
 	//Create go --> js bindings and register them in the Bind array
 	data := bindings.NewData()
 
-	// Create application with options
+	//Create application with options
 	err = wails.Run(&options.App{
 		Title:  "time-sink",
 		Width:  1024,
@@ -65,12 +68,39 @@ func startup() {
 	internal.CreateTableIfNotExists()
 }
 
-// TODO: delete after ensuring things work
-func buildTestToWatchSet() *hashset.Set {
+func buildTestToWatchSet(config internal.TimeSinkConfig) *hashset.Set {
 	set := hashset.New()
-	set.Add("firefox.exe")
-	set.Add("Discord.exe")
-	set.Add("Marvel-Win64-Shipping.exe")
+	for _, app := range config.Applications {
+		set.Add(app)
+	}
 
 	return set
+}
+
+func buildSchedule(config internal.TimeSinkConfig, toWatch *hashset.Set, scheduler *gocron.Scheduler) error {
+	configuredInterval := config.CheckInterval
+	parts := strings.Split(configuredInterval, " ")
+
+	if len(parts) != 2 {
+		panic("Invalid check_interval string")
+	}
+
+	duration, err := strconv.Atoi(parts[0])
+	if err != nil {
+		panic("invalid check_interval duration")
+	}
+
+	switch parts[1] {
+	case "h":
+		_, err := scheduler.Every(duration).Hours().Do(internal.RecordProcesses, toWatch)
+		return err
+	case "m":
+		_, err := scheduler.Every(duration).Minutes().Do(internal.RecordProcesses, toWatch)
+		return err
+	case "s":
+		_, err := scheduler.Every(duration).Seconds().Do(internal.RecordProcesses, toWatch)
+		return err
+	default:
+		panic("Invalid check_interval string")
+	}
 }

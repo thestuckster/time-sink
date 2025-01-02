@@ -5,6 +5,10 @@ import {Greet} from "../wailsjs/go/main/App";
 import {GetDailyProcesses} from "../wailsjs/go/bindings/DataBinding";
 import {dateToStandardString} from "./utils/timeUtils";
 
+import "@mantine/core/styles.css";
+import {MantineProvider} from "@mantine/core";
+import {theme} from "./theme";
+
 function App() {
     const [resultText, setResultText] = useState("Please enter your name below 👇");
     const [name, setName] = useState('');
@@ -26,18 +30,21 @@ function App() {
     }
 
     return (
-        <div id="App">
-            <img src={logo} id="logo" alt="logo"/>
-            <div id="result" className="result">{resultText}</div>
-            <div id="input" className="input-box">
-                <input id="name" className="input" onChange={updateName} autoComplete="off" name="input" type="text"/>
-                <button className="btn" onClick={greet}>Greet</button>
-                <button className="btn" onClick={getDailyUsage}>TEST</button>
+        <MantineProvider>
+            <div id="App">
+                <img src={logo} id="logo" alt="logo"/>
+                <div id="result" className="result">{resultText}</div>
+                <div id="input" className="input-box">
+                    <input id="name" className="input" onChange={updateName} autoComplete="off" name="input"
+                           type="text"/>
+                    <button className="btn" onClick={greet}>Greet</button>
+                    <button className="btn" onClick={getDailyUsage}>TEST</button>
+                </div>
+                <div>
+                    {usageData}
+                </div>
             </div>
-            <div>
-                {usageData}
-            </div>
-        </div>
+        </MantineProvider>
     )
 }
 

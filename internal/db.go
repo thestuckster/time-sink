@@ -48,9 +48,9 @@ func SaveSeenProcess(proc Process) {
 	updateExistingProcess(db, existingProc.Id, updatedDuration)
 }
 
-func GetDailyRecords(date string) []ProcessDto {
+func GetDailyRecords(date string) []ProcessUsageDbDto {
 
-	processes := make([]ProcessDto, 0)
+	processes := make([]ProcessUsageDbDto, 0)
 
 	db, err := openDb()
 	defer db.Close()
@@ -62,7 +62,7 @@ func GetDailyRecords(date string) []ProcessDto {
 	defer rows.Close()
 
 	for rows.Next() {
-		var proc ProcessDto
+		var proc ProcessUsageDbDto
 		err = rows.Scan(&proc.Id, &proc.Name, &proc.Seen, &proc.Duration)
 		if err != nil {
 			panic(err)
@@ -85,7 +85,7 @@ func openDb() (*sql.DB, error) {
 
 func checkForExistingRecord(db *sql.DB, proc Process) *Process {
 
-	var existingProc ProcessDto
+	var existingProc ProcessUsageDbDto
 
 	seenDate := ToStandardDateFormat(proc.Time)
 

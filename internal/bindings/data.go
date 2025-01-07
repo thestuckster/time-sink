@@ -22,7 +22,7 @@ func (d *DataBinding) GetDailyProcesses(date string) []ProcessUsageInfoDto {
 	return mapProcessesDtos(internal.GetDailyRecords(date))
 }
 
-func mapProcessesDtos(data []internal.ProcessDto) []ProcessUsageInfoDto {
+func mapProcessesDtos(data []internal.ProcessUsageDbDto) []ProcessUsageInfoDto {
 	usageInfo := make([]ProcessUsageInfoDto, 0)
 	for _, d := range data {
 		usageInfo = append(usageInfo, ProcessUsageInfoDto{

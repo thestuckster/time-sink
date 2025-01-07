@@ -12,7 +12,7 @@ type Process struct {
 	Time     time.Time
 }
 
-type ProcessDto struct {
+type ProcessUsageDbDto struct {
 	Id       int
 	Name     string
 	Seen     string // mm/DD/yyyy

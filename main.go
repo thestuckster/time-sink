@@ -36,6 +36,7 @@ func main() {
 	//Create go --> js bindings and register them in the Bind array
 	dataBinding := bindings.NewDataBinding()
 	configBinding := bindings.NewTimeSinkConfigBinding()
+	processBinding := bindings.NewProcessBinding()
 
 	//Create application with options
 	err = wails.Run(&options.App{
@@ -51,6 +52,7 @@ func main() {
 			app,
 			dataBinding,
 			configBinding,
+			processBinding,
 		},
 	})
 

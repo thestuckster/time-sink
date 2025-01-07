@@ -20,8 +20,8 @@ func CreateTableIfNotExists() {
 		`CREATE TABLE IF NOT EXISTS applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(255) NOT NULL,
-    seen TEXT NOT NULL,
-    duration TEXT
+    seen REAL NOT NULL,
+    duration INTEGER
 		)`)
 	if err != nil {
 		return
@@ -38,14 +38,13 @@ func SaveSeenProcess(proc Process) {
 	}
 	defer db.Close()
 
-	existingProc := checkForExistingRecord(db, proc)
+	existingProc := getExistingUsageRecord(db, proc)
 	if existingProc == nil {
 		saveNewProcess(db, proc)
 		return
 	}
 
-	updatedDuration := FormatTimeToHHMMSS(ParseHHMMSS(existingProc.Duration).Add(time.Minute))
-	updateExistingProcess(db, existingProc.Id, updatedDuration)
+	updateExistingProcess(db, existingProc.Id)
 }
 
 func GetDailyRecords(date string) []ProcessUsageDbDto {
@@ -83,13 +82,12 @@ func openDb() (*sql.DB, error) {
 	return db, err
 }
 
-func checkForExistingRecord(db *sql.DB, proc Process) *Process {
+func getExistingUsageRecord(db *sql.DB, proc Process) *Process {
 
 	var existingProc ProcessUsageDbDto
 
-	seenDate := ToStandardDateFormat(proc.Time)
-
-	err := db.QueryRow("SELECT * FROM applications WHERE name = ? AND seen = ?", proc.Name, seenDate).
+	standardDate := ToStandardDateFormat(proc.Seen)
+	err := db.QueryRow(`SELECT * FROM applications WHERE name = ? AND seen >= julianday(?) AND seen < julianday(?, "+1 day")`, proc.Name, standardDate, standardDate).
 		Scan(&existingProc.Id, &existingProc.Name, &existingProc.Seen, &existingProc.Duration)
 
 	if err != nil {
@@ -101,29 +99,32 @@ func checkForExistingRecord(db *sql.DB, proc Process) *Process {
 	}
 
 	return &Process{
-		Id:       existingProc.Id,
 		Name:     existingProc.Name,
-		Seen:     existingProc.Seen,
+		Seen:     FromRealDate(existingProc.Seen),
 		Duration: existingProc.Duration,
 	}
 }
 
 func saveNewProcess(db *sql.DB, proc Process) {
 
-	statement, err := db.Prepare("INSERT INTO applications (name, seen, duration) VALUES (?, ?, ?)")
+	statement, err := db.Prepare("INSERT INTO applications (name, seen, duration) VALUES (?, ?, 0)")
 	if err != nil {
 		panic(err)
 	}
 	defer statement.Close()
 
-	seen := ToStandardDateFormat(proc.Time)
-	_, err = statement.Exec(proc.Name, seen, StartingDuration())
+	seen := ToRealDate(proc.Seen)
+	_, err = statement.Exec(proc.Name, seen)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func updateExistingProcess(db *sql.DB, rowId int, updatedDuration string) {
+func updateExistingProcess(db *sql.DB, rowId int) {
+
+	existingRecord := getExistingRecordById(db, rowId)
+	updatedDuration := calculateDuration(existingRecord)
+
 	updateQuery := `
 UPDATE applications 
 SET duration = ? 
@@ -133,4 +134,31 @@ WHERE id = ?
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getExistingRecordById(db *sql.DB, id int) *ProcessUsageDbDto {
+	statement, err := db.Prepare("SELECT * FROM applications WHERE id = ?")
+	if err != nil {
+		panic(err)
+	}
+	defer statement.Close()
+
+	var existingProc ProcessUsageDbDto
+	err = statement.QueryRow(id).
+		Scan(&existingProc.Id, &existingProc.Name, &existingProc.Seen, &existingProc.Duration)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		} else {
+			panic(err)
+		}
+	}
+
+	return &existingProc
+}
+
+func calculateDuration(dto *ProcessUsageDbDto) int64 {
+	then := FromRealDate(dto.Seen).Unix()
+	return time.Now().Unix() - then
 }

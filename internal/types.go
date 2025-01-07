@@ -7,16 +7,16 @@ import (
 type Process struct {
 	Id       int
 	Name     string
-	Seen     string // mm/DD/yyyy
-	Duration string //HH:MM:SS
-	Time     time.Time
+	Seen     time.Time
+	Duration int64     // delta of Seen and now, in minutes
+	Time     time.Time //TODO: remove if not needed
 }
 
 type ProcessUsageDbDto struct {
 	Id       int
 	Name     string
-	Seen     string // mm/DD/yyyy
-	Duration string //HH:MM:SS
+	Seen     float64 //nanoseconds of unix epoch
+	Duration int64   // delta of Seen and now, in minutes
 }
 
 type TimeSinkConfig struct {

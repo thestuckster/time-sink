@@ -5,10 +5,10 @@ import (
 	"time-sink/internal"
 )
 
-type ProcessUsageInfoDto struct {
+type ProcessUsageData struct {
 	Name     string `json:"name"`
 	Seen     string `json:"seen"`
-	Duration string `json:"duration"`
+	Duration int64  `json:"duration"`
 }
 
 type DataBinding struct {
@@ -18,16 +18,18 @@ type DataBinding struct {
 func NewDataBinding() *DataBinding { return &DataBinding{} }
 
 // GetDailyProcesses date parameter needs format of "yyyy-MM-dd"
-func (d *DataBinding) GetDailyProcesses(date string) []ProcessUsageInfoDto {
+func (d *DataBinding) GetDailyProcesses(date string) []ProcessUsageData {
 	return mapProcessesDtos(internal.GetDailyRecords(date))
 }
 
-func mapProcessesDtos(data []internal.ProcessUsageDbDto) []ProcessUsageInfoDto {
-	usageInfo := make([]ProcessUsageInfoDto, 0)
+func mapProcessesDtos(data []internal.ProcessUsageDbDto) []ProcessUsageData {
+	usageInfo := make([]ProcessUsageData, 0)
 	for _, d := range data {
-		usageInfo = append(usageInfo, ProcessUsageInfoDto{
+
+		internal.ToStandardDateFormat(internal.FromRealDate(d.Seen))
+		usageInfo = append(usageInfo, ProcessUsageData{
 			Name:     d.Name,
-			Seen:     d.Seen,
+			Seen:     internal.ToStandardDateFormat(internal.FromRealDate(d.Seen)),
 			Duration: d.Duration,
 		})
 	}

@@ -54,11 +54,12 @@ func GetDailyRecords(date string) []ProcessUsageDbDto {
 	db, err := openDb()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT * FROM applications WHERE seen = ?", date)
+	today := ToStandardDateFormat(time.Now())
+	rows, err := db.Query(`SELECT * FROM applications WHERE seen >= julianday(?) AND julianday(?, "+1 day")`, today, today)
+	defer rows.Close()
 	if err != nil {
 		panic(err)
 	}
-	defer rows.Close()
 
 	for rows.Next() {
 		var proc ProcessUsageDbDto

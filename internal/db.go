@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"github.com/labstack/gommon/log"
 	_ "modernc.org/sqlite"
 	"time"
 )
@@ -40,10 +42,12 @@ func SaveSeenProcess(proc Process) {
 
 	existingProc := getExistingUsageRecord(db, proc)
 	if existingProc == nil {
+		log.Info(fmt.Sprintf("Saving new record for process name %s\n", proc.Name))
 		saveNewProcess(db, proc)
 		return
 	}
 
+	log.Info(fmt.Sprintf("Updating record for process name %s\n", proc.Name))
 	updateExistingProcess(db, existingProc.Id)
 }
 
@@ -93,6 +97,7 @@ func getExistingUsageRecord(db *sql.DB, proc Process) *Process {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Info(fmt.Sprintf("No existing usage records found for process %s\n", proc.Name))
 			return nil
 		} else {
 			panic(err)
@@ -161,5 +166,7 @@ func getExistingRecordById(db *sql.DB, id int) *ProcessUsageDbDto {
 
 func calculateDuration(dto *ProcessUsageDbDto) int64 {
 	then := FromRealDate(dto.Seen).Unix()
+	fmt.Printf("Then %d\n", then)
+	fmt.Printf("now %d\n", time.Now().Unix())
 	return time.Now().Unix() - then
 }

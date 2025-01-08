@@ -23,7 +23,7 @@ func RecordProcesses(toWatch *hashset.Set) {
 			fmt.Printf("saving process %s\n", name)
 			SaveSeenProcess(Process{
 				Name: name,
-				Time: time.Now(),
+				Seen: time.Now(),
 			})
 			alreadyRecorded.Add(name)
 		}

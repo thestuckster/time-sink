@@ -3,11 +3,9 @@ package internal
 import (
 	"context"
 	"database/sql"
-	"errors"
-	"fmt"
-	"github.com/labstack/gommon/log"
 	_ "modernc.org/sqlite"
 	"time"
+	"time-sink/internal/repository"
 )
 
 func CreateTableIfNotExists() {
@@ -22,7 +20,7 @@ func CreateTableIfNotExists() {
 		`CREATE TABLE IF NOT EXISTS applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(255) NOT NULL,
-    seen REAL NOT NULL,
+    seen INTEGER NOT NULL,
     duration INTEGER
 		)`)
 	if err != nil {
@@ -40,42 +38,40 @@ func SaveSeenProcess(proc Process) {
 	}
 	defer db.Close()
 
-	existingProc := getExistingUsageRecord(db, proc)
-	if existingProc == nil {
-		log.Info(fmt.Sprintf("Saving new record for process name %s\n", proc.Name))
-		saveNewProcess(db, proc)
+	existingApplication := repository.FindByNameAndCurrentDay(proc.Name, db)
+	if existingApplication != nil {
+		newDuration := calculateNewDuration(existingApplication)
+		repository.UpdateDuration(*existingApplication.Id, newDuration, db)
 		return
 	}
 
-	log.Info(fmt.Sprintf("Updating record for process name %s\n", proc.Name))
-	updateExistingProcess(db, existingProc.Id)
+	dto := processToApplicationDto(&proc)
+	repository.SaveNew(dto, db)
 }
 
-func GetDailyRecords(date string) []ProcessUsageDbDto {
-
-	processes := make([]ProcessUsageDbDto, 0)
+func GetDailyRecords() []repository.ApplicationDto {
 
 	db, err := openDb()
 	defer db.Close()
-
-	today := ToStandardDateFormat(time.Now())
-	rows, err := db.Query(`SELECT * FROM applications WHERE seen >= julianday(?) AND julianday(?, "+1 day")`, today, today)
-	defer rows.Close()
 	if err != nil {
 		panic(err)
 	}
 
-	for rows.Next() {
-		var proc ProcessUsageDbDto
-		err = rows.Scan(&proc.Id, &proc.Name, &proc.Seen, &proc.Duration)
-		if err != nil {
-			panic(err)
-		}
+	return repository.FindAllByCurrentDay(db)
+}
 
-		processes = append(processes, proc)
+func calculateNewDuration(existingApp *repository.ApplicationDto) int64 {
+	now := time.Now()
+	seen := existingApp.Seen
+
+	return now.Unix() - seen
+}
+
+func processToApplicationDto(proc *Process) *repository.ApplicationDto {
+	return &repository.ApplicationDto{
+		Name: proc.Name,
+		Seen: proc.Seen.Unix(),
 	}
-
-	return processes
 }
 
 func openDb() (*sql.DB, error) {
@@ -85,88 +81,4 @@ func openDb() (*sql.DB, error) {
 		panic(err)
 	}
 	return db, err
-}
-
-func getExistingUsageRecord(db *sql.DB, proc Process) *Process {
-
-	var existingProc ProcessUsageDbDto
-
-	standardDate := ToStandardDateFormat(proc.Seen)
-	err := db.QueryRow(`SELECT * FROM applications WHERE name = ? AND seen >= julianday(?) AND seen < julianday(?, "+1 day")`, proc.Name, standardDate, standardDate).
-		Scan(&existingProc.Id, &existingProc.Name, &existingProc.Seen, &existingProc.Duration)
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Info(fmt.Sprintf("No existing usage records found for process %s\n", proc.Name))
-			return nil
-		} else {
-			panic(err)
-		}
-	}
-
-	return &Process{
-		Name:     existingProc.Name,
-		Seen:     FromRealDate(existingProc.Seen),
-		Duration: existingProc.Duration,
-	}
-}
-
-func saveNewProcess(db *sql.DB, proc Process) {
-
-	statement, err := db.Prepare("INSERT INTO applications (name, seen, duration) VALUES (?, ?, 0)")
-	if err != nil {
-		panic(err)
-	}
-	defer statement.Close()
-
-	seen := ToRealDate(proc.Seen)
-	_, err = statement.Exec(proc.Name, seen)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func updateExistingProcess(db *sql.DB, rowId int) {
-
-	existingRecord := getExistingRecordById(db, rowId)
-	updatedDuration := calculateDuration(existingRecord)
-
-	updateQuery := `
-UPDATE applications 
-SET duration = ? 
-WHERE id = ?
-`
-	_, err := db.Exec(updateQuery, updatedDuration, rowId)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func getExistingRecordById(db *sql.DB, id int) *ProcessUsageDbDto {
-	statement, err := db.Prepare("SELECT * FROM applications WHERE id = ?")
-	if err != nil {
-		panic(err)
-	}
-	defer statement.Close()
-
-	var existingProc ProcessUsageDbDto
-	err = statement.QueryRow(id).
-		Scan(&existingProc.Id, &existingProc.Name, &existingProc.Seen, &existingProc.Duration)
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil
-		} else {
-			panic(err)
-		}
-	}
-
-	return &existingProc
-}
-
-func calculateDuration(dto *ProcessUsageDbDto) int64 {
-	then := FromRealDate(dto.Seen).Unix()
-	fmt.Printf("Then %d\n", then)
-	fmt.Printf("now %d\n", time.Now().Unix())
-	return time.Now().Unix() - then
 }

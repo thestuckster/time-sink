@@ -18,8 +18,8 @@ type TimeSinkConfigBinding struct {
 
 func NewTimeSinkConfigBinding() *TimeSinkConfigBinding { return &TimeSinkConfigBinding{} }
 
-func (cfg *TimeSinkConfigBinding) LoadConfig() ConfigDto {
-	config := cfg.LoadConfig()
+func (cfg *TimeSinkConfigBinding) GetConfig() ConfigDto {
+	config := cfg.GetConfig()
 	return ConfigDto{Applications: config.Applications, CheckInterval: config.CheckInterval}
 }
 

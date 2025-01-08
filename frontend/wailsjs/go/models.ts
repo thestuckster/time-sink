@@ -58,7 +58,7 @@ export namespace bindings {
 	}
 	export class ProcessUsageData {
 	    name: string;
-	    seen: string;
+	    seen: number;
 	    duration: number;
 	
 	    static createFrom(source: any = {}) {

@@ -6,9 +6,7 @@ toolchain go1.23.0
 
 require (
 	github.com/emirpasic/gods v1.18.1
-	github.com/fluentassert/verify v1.2.0
 	github.com/go-co-op/gocron v1.37.0
-	github.com/labstack/gommon v0.4.0
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/wailsapp/wails/v2 v2.9.2
 	modernc.org/sqlite v1.34.4
@@ -41,7 +39,6 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gookit/color v1.5.2 // indirect
@@ -54,6 +51,7 @@ require (
 	github.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/labstack/echo/v4 v4.10.2 // indirect
+	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leaanthony/clir v1.3.0 // indirect
 	github.com/leaanthony/debme v1.2.1 // indirect
 	github.com/leaanthony/go-ansi-parser v1.6.0 // indirect

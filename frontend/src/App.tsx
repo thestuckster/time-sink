@@ -2,6 +2,7 @@ import React from 'react';
 import {GetProp, Layout, Menu, MenuProps} from 'antd';
 import {PieChartOutlined, SettingOutlined} from "@ant-design/icons";
 import {Content, Header} from "antd/es/layout/layout";
+import Config from "./components/Config";
 
 type MenuItem = GetProp<MenuProps, 'items'>[number];
 
@@ -37,8 +38,18 @@ function App() {
     // @ts-ignore
     const onMenuSelected = ({item, key, keyPath, selectedKeys, domEvent}) => {
         setSelected(selectedKeys);
+
         // @ts-ignore
-        console.info(items[key-1]!['label'])
+        setCurrentContent(items[key-1]!['label']);
+    }
+
+    const renderContent = () => {
+        console.log("renderContent");
+        if (currentContent == "Config") {
+            return <Config></Config>
+        } else {
+            return null;
+        }
     }
 
     return (
@@ -57,7 +68,7 @@ function App() {
                     />
                 </Header>
                 <Content>
-
+                    {renderContent()}
                 </Content>
             </Layout>
         </>

@@ -1,11 +1,9 @@
-import {useEffect, useState} from 'react';
-import './App.css';
+import React from 'react';
+import {GetProp, Layout, Menu, MenuProps} from 'antd';
+import {PieChartOutlined, SettingOutlined} from "@ant-design/icons";
+import {Content, Header} from "antd/es/layout/layout";
 
-import "@mantine/core/styles.css";
-import {AppShell, Burger, MantineProvider} from "@mantine/core";
-import {theme} from "./theme";
-import {useDisclosure} from "@mantine/hooks";
-
+type MenuItem = GetProp<MenuProps, 'items'>[number];
 
 interface UsageInfo {
     name: string;
@@ -17,39 +15,52 @@ interface Processes {
     processes: string[];
 }
 
+const items: MenuItem[] = [
+    {
+        key: '1',
+        icon: <PieChartOutlined/>,
+        label: "Stats"
+    },
+    {
+        key: '2',
+        icon: <SettingOutlined/>,
+        label: "Config"
+    }
+
+]
+
 function App() {
 
-    const [opened, { toggle }] = useDisclosure();
+    const [selected, setSelected] = React.useState<string[]>(['1']);
+    const [currentContent, setCurrentContent] = React.useState('');
+
+    // @ts-ignore
+    const onMenuSelected = ({item, key, keyPath, selectedKeys, domEvent}) => {
+        setSelected(selectedKeys);
+        // @ts-ignore
+        console.info(items[key-1]!['label'])
+    }
 
     return (
-        <MantineProvider defaultColorScheme={"dark"} theme={theme}>
-            <div id="App">
-                <h1>Time Sink</h1>
-                <AppShell
-                    header={{ height: 60 }}
-                    navbar={{
-                        width: 300,
-                        breakpoint: 'sm',
-                        collapsed: { mobile: !opened },
-                    }}
-                    padding="md"
-                >
-                    <AppShell.Header>
-                        <Burger
-                            opened={opened}
-                            onClick={toggle}
-                            hiddenFrom="sm"
-                            size="sm"
-                        />
-                        <div>Logo</div>
-                    </AppShell.Header>
+        <>
+            <Layout>
+                <Header style={{display: 'flex', alignItems: 'center', background: "white"}}>
+                    <div style={{backgroundColor:'white'}}>
+                        Time Sink
+                    </div>
+                    <Menu
+                        mode={"horizontal"}
+                        defaultSelectedKeys={selected}
+                        items={items}
+                        style={{flex: 1, minWidth: 0}}
+                        onSelect={onMenuSelected}
+                    />
+                </Header>
+                <Content>
 
-                    <AppShell.Navbar p="md">Navbar</AppShell.Navbar>
-
-                    <AppShell.Main>Main</AppShell.Main>
-                </AppShell>
-            </div>
-        </MantineProvider>
+                </Content>
+            </Layout>
+        </>
     );
 }
 

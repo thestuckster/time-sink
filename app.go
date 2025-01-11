@@ -23,5 +23,6 @@ func (a *App) startup(ctx context.Context) {
 
 // Greet returns a greeting for the given name
 func (a *App) Greet(name string) string {
+	fmt.Println("Greet backend call")
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }

@@ -2,6 +2,7 @@ package bindings
 
 import (
 	"context"
+	"fmt"
 	"time-sink/internal"
 )
 
@@ -19,7 +20,8 @@ type TimeSinkConfigBinding struct {
 func NewTimeSinkConfigBinding() *TimeSinkConfigBinding { return &TimeSinkConfigBinding{} }
 
 func (cfg *TimeSinkConfigBinding) GetConfig() ConfigDto {
-	config := cfg.GetConfig()
+	fmt.Println("&&&&& get config call")
+	config := internal.LoadConfiguration()
 	return ConfigDto{Applications: config.Applications, CheckInterval: config.CheckInterval}
 }
 

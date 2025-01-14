@@ -7,21 +7,21 @@ import (
 	"time"
 )
 
-type ApplicationDto struct {
+type ApplicationRecordEntity struct {
 	Id       *int
 	Name     string
 	Seen     int64 // seconds of unix epoch
 	Duration int64 // delta of Seen and now
 }
 
-func FindById(id int, db *sql.DB) *ApplicationDto {
+func FindById(id int, db *sql.DB) *ApplicationRecordEntity {
 	statement, err := db.Prepare("SELECT * FROM applications WHERE id=?")
 	defer statement.Close()
 	if err != nil {
 		panic(err)
 	}
 
-	var record ApplicationDto
+	var record ApplicationRecordEntity
 	err = statement.QueryRow(id).Scan(&record.Id, &record.Name, &record.Seen, &record.Duration)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -34,9 +34,9 @@ func FindById(id int, db *sql.DB) *ApplicationDto {
 	return &record
 }
 
-func FindByNameAndCurrentDay(name string, db *sql.DB) *ApplicationDto {
+func FindByNameAndCurrentDay(name string, db *sql.DB) *ApplicationRecordEntity {
 
-	var record ApplicationDto
+	var record ApplicationRecordEntity
 
 	now := getToday()
 	tomorrow := getTomorrowMidnight(now)
@@ -56,9 +56,9 @@ func FindByNameAndCurrentDay(name string, db *sql.DB) *ApplicationDto {
 	return &record
 }
 
-func FindAllByCurrentDay(db *sql.DB) []ApplicationDto {
+func FindAllByCurrentDay(db *sql.DB) []ApplicationRecordEntity {
 
-	records := make([]ApplicationDto, 0)
+	records := make([]ApplicationRecordEntity, 0)
 
 	now := getToday()
 	tomorrow := getTomorrowMidnight(now)
@@ -70,7 +70,7 @@ func FindAllByCurrentDay(db *sql.DB) []ApplicationDto {
 	}
 
 	for rows.Next() {
-		var record ApplicationDto
+		var record ApplicationRecordEntity
 		err = rows.Scan(&record.Id, &record.Name, &record.Seen, &record.Duration)
 		if err != nil {
 			panic(err)
@@ -82,7 +82,30 @@ func FindAllByCurrentDay(db *sql.DB) []ApplicationDto {
 	return records
 }
 
-func SaveNew(dto *ApplicationDto, db *sql.DB) {
+func FindAllInRange(db *sql.DB, start, end int64) []ApplicationRecordEntity {
+
+	records := make([]ApplicationRecordEntity, 0)
+
+	rows, err := db.Query(`SELECT * FROM applications WHERE seen >= ? AND seen < ?`, start, end)
+	defer rows.Close()
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+		var record ApplicationRecordEntity
+		err = rows.Scan(&record.Id, &record.Name, &record.Seen, &record.Duration)
+		if err != nil {
+			panic(err)
+		}
+
+		records = append(records, record)
+	}
+
+	return records
+}
+
+func SaveNew(dto *ApplicationRecordEntity, db *sql.DB) {
 	statement, err := db.Prepare(`INSERT INTO applications(name, seen, duration) VALUES (?, ?, ?)`)
 	defer statement.Close()
 	if err != nil {

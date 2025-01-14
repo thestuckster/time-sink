@@ -2,6 +2,7 @@ package bindings
 
 import (
 	"context"
+	"time"
 	"time-sink/internal"
 	"time-sink/internal/repository"
 )
@@ -12,20 +13,43 @@ type ProcessUsageData struct {
 	Duration int64  `json:"duration"`
 }
 
+type TotalDuration struct {
+	TotalDuration int64 `json:"total_duration"`
+}
+
 type DataBinding struct {
 	ctx context.Context
 }
 
 func NewDataBinding() *DataBinding { return &DataBinding{} }
 
-// GetDailyProcesses date parameter needs format of "yyyy-MM-dd"
 func (d *DataBinding) GetDailyProcesses() []ProcessUsageData {
-	return mapProcessesDtos(internal.GetDailyRecords())
+	return mapAllToDtos(internal.GetDailyRecords())
 }
 
-func mapProcessesDtos(data []repository.ApplicationDto) []ProcessUsageData {
+func (d *DataBinding) GetLast30Days() map[string]TotalDuration {
+	today := time.Now()
+	past := today.AddDate(0, 0, -30)
+
+	applicationRecords := internal.GetRecordsInRange(past, today)
+
+	response := make(map[string]TotalDuration)
+	for _, record := range applicationRecords {
+		if val, ok := response[record.Name]; ok {
+			val.TotalDuration += record.Duration
+		} else {
+			response[record.Name] = TotalDuration{
+				TotalDuration: record.Duration,
+			}
+		}
+	}
+
+	return response
+}
+
+func mapAllToDtos(applicationRecords []repository.ApplicationRecordEntity) []ProcessUsageData {
 	usageInfo := make([]ProcessUsageData, 0)
-	for _, d := range data {
+	for _, d := range applicationRecords {
 
 		usageInfo = append(usageInfo, ProcessUsageData{
 			Name:     d.Name,

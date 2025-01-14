@@ -49,7 +49,7 @@ func SaveSeenProcess(proc Process) {
 	repository.SaveNew(dto, db)
 }
 
-func GetDailyRecords() []repository.ApplicationDto {
+func GetDailyRecords() []repository.ApplicationRecordEntity {
 
 	db, err := openDb()
 	defer db.Close()
@@ -60,15 +60,25 @@ func GetDailyRecords() []repository.ApplicationDto {
 	return repository.FindAllByCurrentDay(db)
 }
 
-func calculateNewDuration(existingApp *repository.ApplicationDto) int64 {
+func GetRecordsInRange(start, end time.Time) []repository.ApplicationRecordEntity {
+	db, err := openDb()
+	defer db.Close()
+	if err != nil {
+		panic(err)
+	}
+
+	return repository.FindAllInRange(db, start.Unix(), end.Unix())
+}
+
+func calculateNewDuration(existingApp *repository.ApplicationRecordEntity) int64 {
 	now := time.Now()
 	seen := existingApp.Seen
 
 	return now.Unix() - seen
 }
 
-func processToApplicationDto(proc *Process) *repository.ApplicationDto {
-	return &repository.ApplicationDto{
+func processToApplicationDto(proc *Process) *repository.ApplicationRecordEntity {
+	return &repository.ApplicationRecordEntity{
 		Name: proc.Name,
 		Seen: proc.Seen.Unix(),
 	}

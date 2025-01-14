@@ -115,6 +115,7 @@ export default function Config() {
                      <p>Update Every: </p>
                         <InputNumber defaultValue={duration} onChange={onDurationChange}/>
                         <Segmented options={timeOptions} defaultValue={qualifier} onChange={onTimeSelect}/>
+                        <Button type={"primary"} style={{marginLeft: "10px"}}>Save</Button>
                     </div>
                 </Layout>
                 <Layout style={{backgroundColor: "white", textAlign: "center"}}>

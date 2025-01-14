@@ -121,7 +121,7 @@ export default function Config() {
                     {/*TODO: center table on page*/}
                     <div style={{textAlign: "center"}}>
                         <h2>Applications</h2>
-                        <Button type={"primary"} style={{marginBottom: "10px"}} onClick={showModal}>Save
+                        <Button type={"primary"} style={{marginBottom: "10px"}} onClick={showModal}>
                             Add New Application(s)
                         </Button>
                         <Table

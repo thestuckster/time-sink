@@ -126,7 +126,7 @@ export default function Config() {
                             Add New Application(s)
                         </Button>
                         <Table
-                            style={{width: '50%', textAlign: "center"}}
+                            style={{width: '50%', alignItems: "center", textAlign: "center", justifyContent: "center"}}
                             size={"middle"}
                             bordered={true}
                             rowHoverable={true}

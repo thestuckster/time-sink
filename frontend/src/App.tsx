@@ -3,6 +3,7 @@ import {GetProp, Layout, Menu, MenuProps} from 'antd';
 import {PieChartOutlined, SettingOutlined} from "@ant-design/icons";
 import {Content, Header} from "antd/es/layout/layout";
 import Config from "./components/Config";
+import Stats from "./components/Stats";
 
 type MenuItem = GetProp<MenuProps, 'items'>[number];
 
@@ -46,9 +47,9 @@ function App() {
     const renderContent = () => {
         console.log("renderContent");
         if (currentContent == "Config") {
-            return <Config></Config>
+            return <Config/>
         } else {
-            return null;
+            return <Stats/>;
         }
     }
 

@@ -12,6 +12,7 @@ import (
 	"time"
 	"time-sink/internal"
 	"time-sink/internal/bindings"
+	"time-sink/internal/services"
 )
 
 //go:embed all:frontend/dist
@@ -19,7 +20,7 @@ var assets embed.FS
 
 func main() {
 	startup()
-	timeSinkConfig := internal.LoadConfiguration()
+	timeSinkConfig := services.LoadConfiguration()
 
 	//start scheduler
 	toWatch := buildTestToWatchSet(timeSinkConfig)
@@ -68,7 +69,7 @@ func main() {
 
 func startup() {
 	internal.CreateDbFile()
-	internal.CreateTableIfNotExists()
+	services.CreateTableIfNotExists()
 }
 
 func buildTestToWatchSet(config internal.TimeSinkConfig) *hashset.Set {
@@ -95,13 +96,13 @@ func buildSchedule(config internal.TimeSinkConfig, toWatch *hashset.Set, schedul
 
 	switch parts[1] {
 	case "h":
-		_, err := scheduler.Every(duration).Hours().Do(internal.RecordProcesses, toWatch)
+		_, err := scheduler.Every(duration).Hours().Do(services.RecordProcesses, toWatch)
 		return err
 	case "m":
-		_, err := scheduler.Every(duration).Minutes().Do(internal.RecordProcesses, toWatch)
+		_, err := scheduler.Every(duration).Minutes().Do(services.RecordProcesses, toWatch)
 		return err
 	case "s":
-		_, err := scheduler.Every(duration).Seconds().Do(internal.RecordProcesses, toWatch)
+		_, err := scheduler.Every(duration).Seconds().Do(services.RecordProcesses, toWatch)
 		return err
 	default:
 		panic("Invalid check_interval string")

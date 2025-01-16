@@ -1,15 +1,16 @@
-package internal
+package services
 
 import (
 	"context"
 	"database/sql"
 	_ "modernc.org/sqlite"
 	"time"
+	"time-sink/internal"
 	"time-sink/internal/repository"
 )
 
 func CreateTableIfNotExists() {
-	dbPath := *GetDbFilePath()
+	dbPath := *internal.GetDbFilePath()
 
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
@@ -30,8 +31,8 @@ func CreateTableIfNotExists() {
 	defer db.Close()
 }
 
-func SaveSeenProcess(proc Process) {
-	dbPath := *GetDbFilePath()
+func SaveSeenProcess(proc internal.Process) {
+	dbPath := *internal.GetDbFilePath()
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		panic(err)
@@ -77,7 +78,7 @@ func calculateNewDuration(existingApp *repository.ApplicationRecordEntity) int64
 	return now.Unix() - seen
 }
 
-func processToApplicationDto(proc *Process) *repository.ApplicationRecordEntity {
+func processToApplicationDto(proc *internal.Process) *repository.ApplicationRecordEntity {
 	return &repository.ApplicationRecordEntity{
 		Name: proc.Name,
 		Seen: proc.Seen.Unix(),
@@ -85,7 +86,7 @@ func processToApplicationDto(proc *Process) *repository.ApplicationRecordEntity 
 }
 
 func openDb() (*sql.DB, error) {
-	dbPath := *GetDbFilePath()
+	dbPath := *internal.GetDbFilePath()
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		panic(err)

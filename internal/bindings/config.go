@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time-sink/internal"
+	"time-sink/internal/services"
 )
 
 type ConfigDto struct {
@@ -21,12 +22,12 @@ func NewTimeSinkConfigBinding() *TimeSinkConfigBinding { return &TimeSinkConfigB
 
 func (cfg *TimeSinkConfigBinding) GetConfig() ConfigDto {
 	fmt.Println("&&&&& get config call")
-	config := internal.LoadConfiguration()
+	config := services.LoadConfiguration()
 	return ConfigDto{Applications: config.Applications, CheckInterval: config.CheckInterval}
 }
 
 // TODO: right now this requires a restart for changes to take effect. fix so it doesn't.
 func (cfg *TimeSinkConfigBinding) SaveConfig(dto ConfigDto) {
 	timeSinkConfig := internal.TimeSinkConfig{Applications: dto.Applications, CheckInterval: dto.CheckInterval}
-	internal.SaveConfiguration(timeSinkConfig)
+	services.SaveConfiguration(timeSinkConfig)
 }

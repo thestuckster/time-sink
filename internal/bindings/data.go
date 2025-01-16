@@ -3,8 +3,8 @@ package bindings
 import (
 	"context"
 	"time"
-	"time-sink/internal"
 	"time-sink/internal/repository"
+	"time-sink/internal/services"
 )
 
 type ProcessUsageData struct {
@@ -24,14 +24,14 @@ type DataBinding struct {
 func NewDataBinding() *DataBinding { return &DataBinding{} }
 
 func (d *DataBinding) GetDailyProcesses() []ProcessUsageData {
-	return mapAllToDtos(internal.GetDailyRecords())
+	return mapAllToDtos(services.GetDailyRecords())
 }
 
 func (d *DataBinding) GetLast30Days() map[string]TotalDuration {
 	today := time.Now()
 	past := today.AddDate(0, 0, -30)
 
-	applicationRecords := internal.GetRecordsInRange(past, today)
+	applicationRecords := services.GetRecordsInRange(past, today)
 
 	response := make(map[string]TotalDuration)
 	for _, record := range applicationRecords {

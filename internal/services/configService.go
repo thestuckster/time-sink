@@ -1,12 +1,13 @@
-package internal
+package services
 
 import (
 	"encoding/json"
 	"errors"
 	"os"
+	"time-sink/internal"
 )
 
-func LoadConfiguration() TimeSinkConfig {
+func LoadConfiguration() internal.TimeSinkConfig {
 	path := getConfigFilePath()
 	if !configFileExists(path) {
 		file, err := os.Create(path)
@@ -24,7 +25,7 @@ func LoadConfiguration() TimeSinkConfig {
 	return loadConfigFile(path)
 }
 
-func SaveConfiguration(config TimeSinkConfig) {
+func SaveConfiguration(config internal.TimeSinkConfig) {
 	path := getConfigFilePath()
 	writeConfigFile(config, path)
 }
@@ -48,14 +49,14 @@ func configFileExists(path string) bool {
 	return true
 }
 
-func defaultConfig() TimeSinkConfig {
-	return TimeSinkConfig{
+func defaultConfig() internal.TimeSinkConfig {
+	return internal.TimeSinkConfig{
 		Applications:  make([]string, 0),
 		CheckInterval: "1 m",
 	}
 }
 
-func writeConfigFile(config TimeSinkConfig, path string) {
+func writeConfigFile(config internal.TimeSinkConfig, path string) {
 	jsonData, err := json.MarshalIndent(config, "", "\t")
 	if err != nil {
 		panic(err)
@@ -66,13 +67,13 @@ func writeConfigFile(config TimeSinkConfig, path string) {
 	}
 }
 
-func loadConfigFile(path string) TimeSinkConfig {
+func loadConfigFile(path string) internal.TimeSinkConfig {
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
 
-	var config TimeSinkConfig
+	var config internal.TimeSinkConfig
 	err = json.Unmarshal(contents, &config)
 	if err != nil {
 		panic(err)

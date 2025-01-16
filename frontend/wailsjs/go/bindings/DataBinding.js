@@ -5,3 +5,7 @@
 export function GetDailyProcesses() {
   return window['go']['bindings']['DataBinding']['GetDailyProcesses']();
 }
+
+export function GetLast30Days() {
+  return window['go']['bindings']['DataBinding']['GetLast30Days']();
+}

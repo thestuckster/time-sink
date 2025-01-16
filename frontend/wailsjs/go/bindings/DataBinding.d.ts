@@ -3,3 +3,5 @@
 import {bindings} from '../models';
 
 export function GetDailyProcesses():Promise<Array<bindings.ProcessUsageData>>;
+
+export function GetLast30Days():Promise<{[key: string]: bindings.TotalDuration}>;

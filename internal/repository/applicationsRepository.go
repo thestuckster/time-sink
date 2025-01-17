@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"gorm.io/gorm"
+	"log"
 	_ "modernc.org/sqlite"
 	"time"
 	"time-sink/internal/helpers"
@@ -21,9 +22,9 @@ func autoMigrate(db *gorm.DB) {
 
 func SaveApplication(application Application, db *gorm.DB) {
 
-	autoMigrate(db)
+	//autoMigrate(db)
 
-	result := db.Create(&application)
+	result := db.Save(&application)
 	if result.Error != nil {
 		panic(result.Error)
 	}
@@ -53,12 +54,16 @@ func GetApplicationByNameAndDates(name string, start, end time.Time, db *gorm.DB
 	endUnix := helpers.GetStartOfDayUnixEpoch(end)
 
 	var application Application
-	result := db.Where("name = ? AND seen >= start AND seen <= end", name, startUnix, endUnix).Find(&application)
+
+	log.Printf("INFO: Searching for application named \"%s\" with seen date between %d and %d", name, startUnix, endUnix)
+	result := db.Where("name = ? AND seen >= ? AND seen <= ?", name, startUnix, endUnix).First(&application)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			log.Printf("WARNING: No application with name %s was found.", name)
 			return nil
 		}
 	}
+	log.Printf("INFO: Found application with name %s\n %+v", name, application)
 	return &application
 }
 
@@ -68,12 +73,16 @@ func GetAllApplicationsByDates(start, end time.Time, db *gorm.DB) []Application 
 	startUnix := helpers.GetStartOfDayUnixEpoch(start)
 	endUnix := helpers.GetStartOfDayUnixEpoch(end)
 
+	log.Printf("Searching for all applications with seen between %d and %d", startUnix, endUnix)
 	result := db.Where("seen >= ? AND seen <= ?", startUnix, endUnix).Find(&applications)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			log.Printf("WARNING: No applications were found. Returning empty array")
 			return make([]Application, 0)
 		}
 
 	}
+
+	log.Printf("INFO: Found %d applications", len(applications))
 	return applications
 }

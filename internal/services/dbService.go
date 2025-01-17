@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"log"
 	_ "modernc.org/sqlite"
 	"time"
 	"time-sink/internal"
@@ -40,10 +41,12 @@ func SaveApplication(name string) {
 		panic(err)
 	}
 
+	log.Printf("INFO: Searching for application with name %s", name)
 	application := repository.GetApplicationByNameForToday(name, db)
 	if application != nil {
 		updateDuration(application)
 	} else {
+		log.Printf("WARN: No application with name %s found... creating new DB entry", name)
 		application = &repository.Application{
 			Name:     name,
 			Seen:     time.Now().Unix(),
@@ -51,6 +54,7 @@ func SaveApplication(name string) {
 		}
 	}
 
+	log.Printf("INFO: Saving application %v", application)
 	repository.SaveApplication(*application, db)
 }
 
@@ -68,5 +72,8 @@ func GetDailyApplications() []repository.Application {
 
 func updateDuration(application *repository.Application) {
 	now := time.Now().Unix()
-	application.Duration = now - application.Seen
+	newDuration := now - application.Seen
+
+	log.Printf("INFO: Updating duration from %d to %d", application.Duration, newDuration)
+	application.Duration = newDuration
 }

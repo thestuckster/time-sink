@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/mitchellh/go-ps"
+	"log"
 )
 
 func RecordProcesses(toWatch *hashset.Set) {
@@ -19,7 +20,7 @@ func RecordProcesses(toWatch *hashset.Set) {
 	for _, proc := range procs {
 		name := proc.Executable()
 		if toWatch.Contains(name) && !alreadyRecorded.Contains(name) {
-			fmt.Printf("saving process %s\n", name)
+			log.Printf("INFO: Recording information for process name %s", name)
 			SaveApplication(name)
 			alreadyRecorded.Add(name)
 		}

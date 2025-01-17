@@ -1,16 +1,5 @@
 package internal
 
-import (
-	"time"
-)
-
-type Process struct {
-	Id       int
-	Name     string
-	Seen     time.Time
-	Duration int64 // delta of Seen and now
-}
-
 type TimeSinkConfig struct {
 	Applications []string `json:"applications"`
 

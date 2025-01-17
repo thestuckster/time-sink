@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/mitchellh/go-ps"
-	"time"
-	"time-sink/internal"
 )
 
 func RecordProcesses(toWatch *hashset.Set) {
@@ -22,10 +20,7 @@ func RecordProcesses(toWatch *hashset.Set) {
 		name := proc.Executable()
 		if toWatch.Contains(name) && !alreadyRecorded.Contains(name) {
 			fmt.Printf("saving process %s\n", name)
-			SaveSeenProcess(internal.Process{
-				Name: name,
-				Seen: time.Now(),
-			})
+			SaveApplication(name)
 			alreadyRecorded.Add(name)
 		}
 	}

@@ -2,10 +2,13 @@
 
 # Dependencies
 
+* A C compiler such as `gcc` installed
 * Go 1.23
 * Wails installation
   * `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
     * https://wails.io/docs/gettingstarted/installation
+* CGO enabled
+  * `go env -w CGO_ENABLED=1`
 
 
 ## Wails README

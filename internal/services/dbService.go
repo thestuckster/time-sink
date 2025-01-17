@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"database/sql"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	_ "modernc.org/sqlite"
 	"time"
 	"time-sink/internal"
@@ -31,65 +33,40 @@ func CreateTableIfNotExists() {
 	defer db.Close()
 }
 
-func SaveSeenProcess(proc internal.Process) {
+func SaveApplication(name string) {
 	dbPath := *internal.GetDbFilePath()
-	db, err := sql.Open("sqlite", dbPath)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	existingApplication := repository.FindByNameAndCurrentDay(proc.Name, db)
-	if existingApplication != nil {
-		newDuration := calculateNewDuration(existingApplication)
-		repository.UpdateDuration(*existingApplication.Id, newDuration, db)
-		return
-	}
-
-	dto := processToApplicationDto(&proc)
-	repository.SaveNew(dto, db)
-}
-
-func GetDailyRecords() []repository.ApplicationRecordEntity {
-
-	db, err := openDb()
-	defer db.Close()
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
 
-	return repository.FindAllByCurrentDay(db)
-}
-
-func GetRecordsInRange(start, end time.Time) []repository.ApplicationRecordEntity {
-	db, err := openDb()
-	defer db.Close()
-	if err != nil {
-		panic(err)
+	application := repository.GetApplicationByNameForToday(name, db)
+	if application != nil {
+		updateDuration(application)
+	} else {
+		application = &repository.Application{
+			Name:     name,
+			Seen:     time.Now().Unix(),
+			Duration: 0,
+		}
 	}
 
-	return repository.FindAllInRange(db, start.Unix(), end.Unix())
+	repository.SaveApplication(*application, db)
 }
 
-func calculateNewDuration(existingApp *repository.ApplicationRecordEntity) int64 {
-	now := time.Now()
-	seen := existingApp.Seen
-
-	return now.Unix() - seen
-}
-
-func processToApplicationDto(proc *internal.Process) *repository.ApplicationRecordEntity {
-	return &repository.ApplicationRecordEntity{
-		Name: proc.Name,
-		Seen: proc.Seen.Unix(),
-	}
-}
-
-func openDb() (*sql.DB, error) {
+func GetDailyApplications() []repository.Application {
 	dbPath := *internal.GetDbFilePath()
-	db, err := sql.Open("sqlite", dbPath)
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
-	return db, err
+
+	start := time.Now()
+	end := start.AddDate(0, 0, 1)
+	return repository.GetAllApplicationsByDates(start, end, db)
+}
+
+func updateDuration(application *repository.Application) {
+	now := time.Now().Unix()
+	application.Duration = now - application.Seen
 }

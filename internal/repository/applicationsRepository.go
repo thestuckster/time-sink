@@ -1,144 +1,79 @@
 package repository
 
 import (
-	"database/sql"
 	"errors"
+	"gorm.io/gorm"
 	_ "modernc.org/sqlite"
 	"time"
+	"time-sink/internal/helpers"
 )
 
-type ApplicationRecordEntity struct {
-	Id       *int
+type Application struct {
+	gorm.Model
 	Name     string
-	Seen     int64 // seconds of unix epoch
-	Duration int64 // delta of Seen and now
+	Seen     int64
+	Duration int64
 }
 
-func FindById(id int, db *sql.DB) *ApplicationRecordEntity {
-	statement, err := db.Prepare("SELECT * FROM applications WHERE id=?")
-	defer statement.Close()
-	if err != nil {
-		panic(err)
-	}
+func autoMigrate(db *gorm.DB) {
+	db.AutoMigrate(&Application{})
+}
 
-	var record ApplicationRecordEntity
-	err = statement.QueryRow(id).Scan(&record.Id, &record.Name, &record.Seen, &record.Duration)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+func SaveApplication(application Application, db *gorm.DB) {
+
+	autoMigrate(db)
+
+	result := db.Create(&application)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+}
+
+func GetApplicationById(id int, db *gorm.DB) *Application {
+	var application Application
+	result := db.First(&application, id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil
-		} else {
-			panic(err)
 		}
 	}
 
-	return &record
+	return &application
 }
 
-func FindByNameAndCurrentDay(name string, db *sql.DB) *ApplicationRecordEntity {
+func GetApplicationByNameForToday(name string, db *gorm.DB) *Application {
+	start := time.Now()
+	end := start.AddDate(0, 0, 1)
 
-	var record ApplicationRecordEntity
+	return GetApplicationByNameAndDates(name, start, end, db)
+}
 
-	now := getToday()
-	tomorrow := getTomorrowMidnight(now)
+func GetApplicationByNameAndDates(name string, start, end time.Time, db *gorm.DB) *Application {
+	startUnix := helpers.GetStartOfDayUnixEpoch(start)
+	endUnix := helpers.GetStartOfDayUnixEpoch(end)
 
-	err := db.QueryRow(`SELECT * FROM applications WHERE name = ? AND ? >= seen AND seen < ?`,
-		name, now.UnixMilli(), tomorrow.UnixMilli()).
-		Scan(&record.Id, &record.Name, &record.Seen, &record.Duration)
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+	var application Application
+	result := db.Where("name = ? AND seen >= start AND seen <= end", name, startUnix, endUnix).Find(&application)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil
-		} else {
-			panic(err)
 		}
 	}
-
-	return &record
+	return &application
 }
 
-func FindAllByCurrentDay(db *sql.DB) []ApplicationRecordEntity {
+func GetAllApplicationsByDates(start, end time.Time, db *gorm.DB) []Application {
+	var applications []Application
 
-	records := make([]ApplicationRecordEntity, 0)
+	startUnix := helpers.GetStartOfDayUnixEpoch(start)
+	endUnix := helpers.GetStartOfDayUnixEpoch(end)
 
-	now := getToday()
-	tomorrow := getTomorrowMidnight(now)
-
-	rows, err := db.Query(`SELECT * FROM applications WHERE seen >= ? AND seen < ?`, now.Unix(), tomorrow.Unix())
-	defer rows.Close()
-	if err != nil {
-		panic(err)
-	}
-
-	for rows.Next() {
-		var record ApplicationRecordEntity
-		err = rows.Scan(&record.Id, &record.Name, &record.Seen, &record.Duration)
-		if err != nil {
-			panic(err)
+	result := db.Where("seen >= ? AND seen <= ?", startUnix, endUnix).Find(&applications)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return make([]Application, 0)
 		}
 
-		records = append(records, record)
 	}
-
-	return records
-}
-
-func FindAllInRange(db *sql.DB, start, end int64) []ApplicationRecordEntity {
-
-	records := make([]ApplicationRecordEntity, 0)
-
-	rows, err := db.Query(`SELECT * FROM applications WHERE seen >= ? AND seen < ?`, start, end)
-	defer rows.Close()
-	if err != nil {
-		panic(err)
-	}
-
-	for rows.Next() {
-		var record ApplicationRecordEntity
-		err = rows.Scan(&record.Id, &record.Name, &record.Seen, &record.Duration)
-		if err != nil {
-			panic(err)
-		}
-
-		records = append(records, record)
-	}
-
-	return records
-}
-
-func SaveNew(dto *ApplicationRecordEntity, db *sql.DB) {
-	statement, err := db.Prepare(`INSERT INTO applications(name, seen, duration) VALUES (?, ?, ?)`)
-	defer statement.Close()
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = statement.Exec(dto.Name, dto.Seen, dto.Duration)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func UpdateDuration(id int, newDuration int64, db *sql.DB) {
-
-	statement, err := db.Prepare("UPDATE applications SET duration = ? WHERE id = ?")
-	defer statement.Close()
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = statement.Exec(newDuration, id)
-	if err != nil {
-		panic(err)
-	}
-
-}
-
-func getToday() time.Time {
-	now := time.Now()
-	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-}
-
-func getTomorrowMidnight(now time.Time) time.Time {
-	tomorrow := now.AddDate(0, 0, 1)
-	return time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, tomorrow.Location())
+	return applications
 }

@@ -70,6 +70,16 @@ func GetDailyApplications() []repository.Application {
 	return repository.GetAllApplicationsByDates(start, end, db)
 }
 
+func GetAllApplicationsBetweenDates(start, end time.Time) []repository.Application {
+	dbPath := *internal.GetDbFilePath()
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+
+	return repository.GetAllApplicationsByDates(start, end, db)
+}
+
 func updateDuration(application *repository.Application) {
 	now := time.Now().Unix()
 	newDuration := now - application.Seen

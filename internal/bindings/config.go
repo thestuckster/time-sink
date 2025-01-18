@@ -2,7 +2,7 @@ package bindings
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"time-sink/internal"
 	"time-sink/internal/services"
 )
@@ -21,7 +21,7 @@ type TimeSinkConfigBinding struct {
 func NewTimeSinkConfigBinding() *TimeSinkConfigBinding { return &TimeSinkConfigBinding{} }
 
 func (cfg *TimeSinkConfigBinding) GetConfig() ConfigDto {
-	fmt.Println("&&&&& get config call")
+	log.Println("INFO: get config Go")
 	config := services.LoadConfiguration()
 	return ConfigDto{Applications: config.Applications, CheckInterval: config.CheckInterval}
 }

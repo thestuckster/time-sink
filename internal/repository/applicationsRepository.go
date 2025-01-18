@@ -16,14 +16,7 @@ type Application struct {
 	Duration int64
 }
 
-func autoMigrate(db *gorm.DB) {
-	db.AutoMigrate(&Application{})
-}
-
 func SaveApplication(application Application, db *gorm.DB) {
-
-	//autoMigrate(db)
-
 	result := db.Save(&application)
 	if result.Error != nil {
 		panic(result.Error)

@@ -1,56 +1,15 @@
-import {Box, Paper, Tab, Tabs, Typography} from "@mui/material";
+import {Box, Paper, Tab, Table, TableContainer, Tabs, Typography} from "@mui/material";
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import React, {useEffect, useState} from "react";
 import {bindings} from "../../wailsjs/go/models";
-import {GetUsageBetweenDates} from "../../wailsjs/go/bindings/UsageBinding";
+import {GetAllTimeUsage, GetUsageBetweenDates} from "../../wailsjs/go/bindings/UsageBinding";
 import {ResponsiveContainer,} from "recharts";
 import UsageBar from "./UsageBar";
 import {convertDataSecondsToHours} from "../utils/timeUtils";
 import UsageInfo = bindings.UsageInfo;
-
-const data = [
-  {
-    name: "Page A",
-    uv: 4000,
-    pv: 2400,
-    amt: 2400,
-  },
-  {
-    name: "Page B",
-    uv: 3000,
-    pv: 1398,
-    amt: 2210,
-  },
-  {
-    name: "Page C",
-    uv: 2000,
-    pv: 9800,
-    amt: 2290,
-  },
-  {
-    name: "Page D",
-    uv: 2780,
-    pv: 3908,
-    amt: 2000,
-  },
-  {
-    name: "Page E",
-    uv: 1890,
-    pv: 4800,
-    amt: 2181,
-  },
-  {
-    name: "Page F",
-    uv: 2390,
-    pv: 3800,
-    amt: 2500,
-  },
-  {
-    name: "Page G",
-    uv: 3490,
-    pv: 4300,
-    amt: 2100,
-  },
-];
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -86,6 +45,7 @@ export default function StatsContent() {
   const [dailyUsage, setDailyUsage] = useState<UsageInfo[]>([]);
   const [last30, setLast30,] = useState<UsageInfo[]>([]);
   const [lastYear, setLastYear] = useState<UsageInfo[]>([]);
+  const [totalAllTime, setTotalAllTime] = useState<UsageInfo[]>();
 
   const fetchDailyUsage = () => {
     console.info("fetchDailyUsage");
@@ -129,6 +89,12 @@ export default function StatsContent() {
     });
   }
 
+  const getAllTimeUsage = () => {
+    console.info("getAllTimeUsage");
+    GetAllTimeUsage().then(usageInfo => {
+      setTotalAllTime(convertDataSecondsToHours(usageInfo));
+    });
+  }
 
   useEffect(() => {
     fetchDailyUsage();
@@ -139,13 +105,30 @@ export default function StatsContent() {
 
     fetchLastYear();
     setInterval(fetchLastYear, 90000);
-  }, [])
 
+    getAllTimeUsage();
+    setInterval(getAllTimeUsage, 90000);
+  }, [])
 
   const onTabChange = (event: React.SyntheticEvent, tab: number): void => {
     setTabValue(tab);
   }
 
+  const buildAllTimeTable = () =>{
+    if(totalAllTime) {
+      return totalAllTime.map((row) => (
+        <TableRow
+          key={row.Name}
+          // sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+        >
+          <TableCell component="th" scope="row">
+            {row.Name}
+          </TableCell>
+          <TableCell>{row.Duration}</TableCell>
+        </TableRow>
+      ))
+    }
+  }
 
   return (
     <div style={{textAlign: "center", justifyContent: "center",}}>
@@ -155,6 +138,7 @@ export default function StatsContent() {
             <Tab label={"Today's Usage"} {...tabProps(0)} />
             <Tab label={"Last 30 Days"}  {...tabProps(1)} />
             <Tab label={"Yearly Usage"}  {...tabProps(2)} />
+            <Tab label={"All Time"}  {...tabProps(3)} />
           </Tabs>
           <CustomTabPanel
             index={0}
@@ -178,6 +162,24 @@ export default function StatsContent() {
               Usage Over The Year
             </Typography>
             <UsageBar data={lastYear}/>
+          </CustomTabPanel>
+          <CustomTabPanel index={3} value={tabValue}>
+            <Typography variant="h5">
+              Total Usage
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Total Running Time (Hours) </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {buildAllTimeTable()}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </CustomTabPanel>
         </Box>
       </Paper>

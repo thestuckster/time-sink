@@ -183,7 +183,6 @@ export default function StatsContent() {
           </CustomTabPanel>
         </Box>
       </Paper>
-
     </div>
   );
 }

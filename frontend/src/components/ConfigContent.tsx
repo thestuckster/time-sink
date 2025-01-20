@@ -5,7 +5,7 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Paper, TextField,
+  Paper, Table, TableContainer, TextField,
   Typography
 } from "@mui/material";
 import React, {useEffect, useState} from "react";
@@ -13,6 +13,10 @@ import {GetConfig, SaveConfig} from "../../wailsjs/go/bindings/TimeSinkConfigBin
 import {bindings} from "../../wailsjs/go/models";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ConfigDto = bindings.ConfigDto;
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import TableCell from "@mui/material/TableCell";
+import TableBody from "@mui/material/TableBody";
 
 export default function ConfigContent() {
 
@@ -34,6 +38,21 @@ export default function ConfigContent() {
     console.log("on save");
     config!.check_interval = updateInterval!;
     SaveConfig(config!).then(() => console.info("Config Updated"));
+  }
+
+  const buildTrackedApplicationsTable = () => {
+    if(config) {
+      return config.applications.map((appName) => (
+        <TableRow
+          key={appName}
+          // sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+        >
+          <TableCell component="th" scope="row">
+            {appName}
+          </TableCell>
+        </TableRow>
+      ))
+    }
   }
 
   return (
@@ -72,7 +91,18 @@ export default function ConfigContent() {
             <Typography component="span">Applications</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            {config?.check_interval}
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {buildTrackedApplicationsTable()}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </AccordionDetails>
         </Accordion>
       </Paper>

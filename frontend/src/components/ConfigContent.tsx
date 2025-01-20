@@ -51,11 +51,9 @@ export default function ConfigContent() {
     SaveConfig(config!).then(() => console.info("Config Updated"));
   }
 
-  const toggleApplicationTrackingModal = () => {
-    setOpened(!opened);
-  }
-
   const buildTrackedApplicationsTable = () => {
+    //TODO: ideally, I'd like to add a checkbox to each row and a button to delete the checked rows from the config when
+    // a "Stop Tracking" button is pressed.
     if(config) {
       return config.applications.map((appName) => (
         <TableRow
@@ -68,6 +66,10 @@ export default function ConfigContent() {
         </TableRow>
       ))
     }
+  }
+
+  const toggleApplicationTrackingModal = () => {
+    setOpened(!opened);
   }
 
   return (
@@ -132,6 +134,7 @@ export default function ConfigContent() {
       >
         <Paper>
           {
+            //TODO: turn this into a table with check box functionality mentioned in the other TODO but instead of removing, we are adding to the config
             runningProcesses.map((p) => (
              <p>{p.name}</p>
             ))

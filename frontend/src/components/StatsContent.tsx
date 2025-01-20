@@ -1,21 +1,11 @@
-import {Box, Card, Paper, Tab, Tabs, Typography} from "@mui/material";
+import {Box, Paper, Tab, Tabs, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {bindings} from "../../wailsjs/go/models";
-import ProcessUsageData = bindings.ProcessUsageData;
-import UsageInfo = bindings.UsageInfo;
 import {GetUsageBetweenDates} from "../../wailsjs/go/bindings/UsageBinding";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  Rectangle,
-  ResponsiveContainer,
-} from "recharts";
+import {ResponsiveContainer,} from "recharts";
 import UsageBar from "./UsageBar";
+import {convertDataSecondsToHours} from "../utils/timeUtils";
+import UsageInfo = bindings.UsageInfo;
 
 const data = [
   {
@@ -94,47 +84,68 @@ function tabProps(index: number) {
 export default function StatsContent() {
   const [tabValue, setTabValue] = useState<number>(0);
   const [dailyUsage, setDailyUsage] = useState<UsageInfo[]>([]);
-  const [last30, setLast30, ] = useState<UsageInfo[]>([]);
+  const [last30, setLast30,] = useState<UsageInfo[]>([]);
+  const [lastYear, setLastYear] = useState<UsageInfo[]>([]);
 
-  useEffect(() => {
+  const fetchDailyUsage = () => {
+    console.info("fetchDailyUsage");
     const now = new Date();
-    now.setHours(0,0,0,0);
+    now.setHours(0, 0, 0, 0);
     let tomorrow = new Date(now)
     tomorrow.setDate(now.getDate() + 1);
 
-    GetUsageBetweenDates(now, tomorrow).then(data => {
-      console.info(data);
-      setDailyUsage(data);
+    GetUsageBetweenDates(now, tomorrow).then(usageInfo => {
+      setDailyUsage(convertDataSecondsToHours(usageInfo));
     });
+  }
 
-    const sooner = new Date(now);
-    sooner.setDate(now.getDate() - 30);
+  const fetchLast30DayUsage = () => {
+    console.info("fetchLast30DayUsage");
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    now.setDate(now.getDate() + 1);
 
-    console.log("looking with dates ", sooner, new Date());
-    GetUsageBetweenDates(sooner, new Date()).then(data => {
-      console.log("last 30 days", data);
-      setLast30(data);
+    const then = new Date()
+    then.setHours(0, 0, 0, 0);
+    then.setDate(now.getDate() - 31);
+
+    GetUsageBetweenDates(then, now).then(usageInfo => {
+      setLast30(convertDataSecondsToHours(usageInfo));
     });
+  }
+
+  const fetchLastYear = () => {
+    console.info("fetchLastYear");
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    now.setDate(now.getDate() + 1);
+
+    const then = new Date()
+    then.setHours(0, 0, 0, 0);
+    then.setDate(now.getDate() - 365);
+
+    GetUsageBetweenDates(then, now).then(usageInfo => {
+      setLastYear(convertDataSecondsToHours(usageInfo));
+    });
+  }
+
+
+  useEffect(() => {
+    fetchDailyUsage();
+    setInterval(fetchDailyUsage, 90000);
+
+    fetchLast30DayUsage();
+    setInterval(fetchLast30DayUsage, 90000);
+
+    fetchLastYear();
+    setInterval(fetchLastYear, 90000);
   }, [])
+
 
   const onTabChange = (event: React.SyntheticEvent, tab: number): void => {
     setTabValue(tab);
   }
 
-  const updateInfo = () => {
-    console.log("Updating Info...");
-    const now = new Date();
-    now.setHours(0,0,0,0);
-    let tomorrow = new Date(now)
-    tomorrow.setDate(now.getDate() + 1);
-
-    GetUsageBetweenDates(now, tomorrow).then(data => {
-      console.info(data);
-      setDailyUsage(data);
-    });
-  }
-
-  setInterval(updateInfo, 90000);
 
   return (
     <div style={{textAlign: "center", justifyContent: "center",}}>
@@ -150,7 +161,7 @@ export default function StatsContent() {
             value={tabValue}
           >
             <Typography variant="h5">
-              Today's Usage
+              Today's Usage In Hours
             </Typography>
             <ResponsiveContainer width={"100%"} style={{margin: "auto"}}>
               <UsageBar data={dailyUsage}/>
@@ -158,20 +169,16 @@ export default function StatsContent() {
           </CustomTabPanel>
           <CustomTabPanel index={1} value={tabValue}>
             <Typography variant="h5">
-              Today's Usage
+              Last 30 Days of Usage In Hours
             </Typography>
             <UsageBar data={last30}/>
           </CustomTabPanel>
-          {/*<CustomTabPanel index={2} value={tabValue}>*/}
-          {/*  <Card>*/}
-          {/*    <BarChart*/}
-          {/*      xAxis={[{ scaleType: 'band', data: ['group A', 'group B', 'group C'] }]}*/}
-          {/*      series={[{ data: [4, 3, 5] }, { data: [1, 6, 3] }, { data: [2, 5, 6] }]}*/}
-          {/*      width={500}*/}
-          {/*      height={300}*/}
-          {/*    />*/}
-          {/*  </Card>*/}
-          {/*</CustomTabPanel>*/}
+          <CustomTabPanel index={2} value={tabValue}>
+            <Typography variant="h5">
+              Usage Over The Year
+            </Typography>
+            <UsageBar data={lastYear}/>
+          </CustomTabPanel>
         </Box>
       </Paper>
 

@@ -2,6 +2,8 @@ package bindings
 
 import (
 	"log"
+	"maps"
+	"slices"
 	"time"
 	"time-sink/internal/services"
 )
@@ -28,4 +30,21 @@ func (usb *UsageBinding) GetUsageBetweenDates(start, end time.Time) []UsageInfo 
 	}
 
 	return response
+}
+
+func (usb *UsageBinding) GetAllTimeUsage() []UsageInfo {
+	allApps := services.GetAll()
+
+	totals := make(map[string]UsageInfo)
+	for _, app := range allApps {
+		if value, ok := totals[app.Name]; ok {
+			temp := value
+			temp.Duration += app.Duration
+			totals[app.Name] = temp
+		} else {
+			totals[app.Name] = UsageInfo{app.Name, app.Duration}
+		}
+	}
+
+	return slices.Collect(maps.Values(totals))
 }

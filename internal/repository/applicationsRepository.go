@@ -80,3 +80,10 @@ func GetAllApplicationsByDates(start, end time.Time, db *gorm.DB) []Application 
 	log.Printf("INFO: Found %d applications", len(applications))
 	return applications
 }
+
+func GetAllApplications(db *gorm.DB) []Application {
+	var applications []Application
+	db.Find(&applications)
+
+	return applications
+}

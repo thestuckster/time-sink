@@ -31,14 +31,17 @@ func main() {
 	}
 	scheduler.StartAsync()
 
-	//Create Wails app. comment if you just want to run the scheduler for development with no UI
+	//Create Wails app. comment all the wails lines if you just want to run the scheduler for development with no UI
 	app := NewApp()
 
 	//Create go --> js bindings and register them in the Bind array
-	dataBinding := bindings.NewDataBinding()
 	configBinding := bindings.NewTimeSinkConfigBinding()
-	processBinding := bindings.NewProcessBinding()
 	usageBinding := bindings.NewUsageBinding()
+	processBinding := bindings.NewProcessBinding()
+
+	//TODO: this is deprecated and needs deleted but doing that will break the UI and I don't feel like fixing it right this second
+	// sorry future me.
+	dataBinding := bindings.NewDataBinding()
 
 	//Create application with options
 	err = wails.Run(&options.App{

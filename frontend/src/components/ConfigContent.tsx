@@ -1,10 +1,10 @@
 import {
   Accordion, AccordionActions,
   AccordionDetails,
-  AccordionSummary, Button,
+  AccordionSummary, Box, Button,
   Card,
   CardContent,
-  CardHeader,
+  CardHeader, Modal,
   Paper, Table, TableContainer, TextField,
   Typography
 } from "@mui/material";
@@ -17,17 +17,28 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import TableBody from "@mui/material/TableBody";
+import {GetCurrentlyRunningProcesses} from "../../wailsjs/go/bindings/ProcessBinding";
+import ProcessListDto = bindings.ProcessListDto;
+import ProcessDto = bindings.ProcessDto;
 
 export default function ConfigContent() {
 
   const [config, setConfig] = useState<ConfigDto>();
   const [updateInterval, setUpdateInterval] = useState<string>();
+  const [opened, setOpened] = useState<boolean>(false);
+  const [runningProcesses, setRunningProcesses] = useState<ProcessDto[]>([]);
 
   useEffect(() => {
       GetConfig().then(config => {
         setConfig(config);
       })
   }, []);
+
+  useEffect(() => {
+    GetCurrentlyRunningProcesses().then(processes => {
+      setRunningProcesses(processes.processes);
+    })
+  }, [opened])
 
   const onUpdateIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log("interval changed ", e.currentTarget.value);
@@ -38,6 +49,10 @@ export default function ConfigContent() {
     console.log("on save");
     config!.check_interval = updateInterval!;
     SaveConfig(config!).then(() => console.info("Config Updated"));
+  }
+
+  const toggleApplicationTrackingModal = () => {
+    setOpened(!opened);
   }
 
   const buildTrackedApplicationsTable = () => {
@@ -79,7 +94,7 @@ export default function ConfigContent() {
             />
           </AccordionDetails>
           <AccordionActions>
-            <Button onClick={onSave}>Save</Button>
+            <Button variant="contained" onClick={onSave}>Save</Button>
           </AccordionActions>
         </Accordion>
         <Accordion defaultExpanded>
@@ -104,8 +119,25 @@ export default function ConfigContent() {
               </Table>
             </TableContainer>
           </AccordionDetails>
+          <AccordionActions>
+            <Button variant="contained" onClick={toggleApplicationTrackingModal}>Track New Application</Button>
+          </AccordionActions>
         </Accordion>
       </Paper>
+      <Modal
+        open={opened}
+        onClose={toggleApplicationTrackingModal}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Paper>
+          {
+            runningProcesses.map((p) => (
+             <p>{p.name}</p>
+            ))
+          }
+        </Paper>
+      </Modal>
     </>
   );
 }

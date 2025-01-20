@@ -34,6 +34,8 @@ func CreateTableIfNotExists() {
 	defer db.Close()
 }
 
+// TODO: there's a bug here where if turn off your computer for a while on the same day, and restart it, time-sink
+// assumes you've been running the application the entire time.
 func SaveApplication(name string) {
 	dbPath := *internal.GetDbFilePath()
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})

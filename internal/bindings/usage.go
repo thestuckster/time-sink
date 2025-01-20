@@ -4,6 +4,7 @@ import (
 	"log"
 	"maps"
 	"slices"
+	"sort"
 	"time"
 	"time-sink/internal/services"
 )
@@ -46,5 +47,9 @@ func (usb *UsageBinding) GetAllTimeUsage() []UsageInfo {
 		}
 	}
 
-	return slices.Collect(maps.Values(totals))
+	summedApps := slices.Collect(maps.Values(totals))
+	sort.Slice(summedApps, func(i, j int) bool {
+		return summedApps[i].Duration > summedApps[j].Duration
+	})
+	return summedApps
 }

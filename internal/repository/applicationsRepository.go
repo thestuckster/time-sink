@@ -17,6 +17,7 @@ type Application struct {
 }
 
 func SaveApplication(application Application, db *gorm.DB) {
+	db.AutoMigrate(&application)
 	result := db.Save(&application)
 	if result.Error != nil {
 		panic(result.Error)

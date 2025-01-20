@@ -72,6 +72,37 @@ export namespace bindings {
 	        this.duration = source["duration"];
 	    }
 	}
+	export class UsageInfo {
+	    Name: string;
+	    Duration: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new UsageInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Name = source["Name"];
+	        this.Duration = source["Duration"];
+	    }
+	}
+
+}
+
+export namespace time {
+	
+	export class Time {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new Time(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
 
 }
 

@@ -38,6 +38,7 @@ func main() {
 	dataBinding := bindings.NewDataBinding()
 	configBinding := bindings.NewTimeSinkConfigBinding()
 	processBinding := bindings.NewProcessBinding()
+	usageBinding := bindings.NewUsageBinding()
 
 	//Create application with options
 	err = wails.Run(&options.App{
@@ -53,6 +54,7 @@ func main() {
 			dataBinding,
 			configBinding,
 			processBinding,
+			usageBinding,
 		},
 	})
 

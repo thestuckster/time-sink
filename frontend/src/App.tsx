@@ -3,6 +3,7 @@ import {AppBar, Button, IconButton, Toolbar, Typography} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import StatsContent from "./components/StatsContent";
 import ConfigContent from "./components/ConfigContent";
+import UsageBar from "./components/UsageBar";
 
 function App() {
 
@@ -35,6 +36,7 @@ function App() {
       </AppBar>
       <br />
       {renderContent()}
+      {/*<UsageBar />*/}
     </>
   );
 }

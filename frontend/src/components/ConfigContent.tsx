@@ -75,14 +75,14 @@ export default function ConfigContent() {
   return (
     <>
       <Paper elevation={4} style={{textAlign: "center", justifyContent: "center"}}>
-        <Typography variant="h6">Edit Config</Typography>
+        <Typography variant="h4">Edit Config</Typography>
         <Accordion defaultExpanded>
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
             aria-controls="panel1-content"
             id="panel1-header"
           >
-            <Typography component="span">Update Interval</Typography>
+            <Typography variant={"h5"}>Update Interval</Typography>
           </AccordionSummary>
           <AccordionDetails>
             {config?.check_interval}
@@ -105,7 +105,7 @@ export default function ConfigContent() {
             aria-controls="panel1-content"
             id="panel1-header"
           >
-            <Typography component="span">Applications</Typography>
+            <Typography variant="h5">Currently Tracked Applications</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <TableContainer component={Paper}>
